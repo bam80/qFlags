@@ -1,6 +1,8 @@
 #include <QFlags>
 #include <QVarLengthArray>
 #include <QDebug>
+#include "boost/concept_check.hpp"
+#include "boost/concept/assert.hpp"
 
 enum Option {
     NoOptions = 0x0,
@@ -46,7 +48,7 @@ public:
         return (T)m;
     }
 
-    class const_iterator : public std::iterator<std::forward_iterator_tag, T> {
+    class const_iterator : public std::iterator<std::forward_iterator_tag, const T> {
         const qtvFlags<T>* /*const */i;     // const avoiding gives us copy assignable class by default
         unsigned int m;
 
@@ -61,6 +63,7 @@ public:
         inline bool operator==(const const_iterator &o) const { return m == o.m /*&& i == o.i*/; }
         inline bool operator!=(const const_iterator &o) const { return m != o.m /*|| i != o.i*/; }
         inline const_iterator& operator++() { m = i->next(m); return *this;}
+        inline const_iterator operator++(int) { const const_iterator n(*this); m = i->next(m); return n; }
     };
 
     const_iterator begin() const { return ++const_iterator(this);}
@@ -104,5 +107,8 @@ int main()
     *i;
 //    *i = (Option)5;
     ++i;
+    ++(i++);
     // empty() test
+
+    BOOST_CONCEPT_ASSERT((boost::ForwardIterator<qtvFlags<Option>::const_iterator>));
 }
